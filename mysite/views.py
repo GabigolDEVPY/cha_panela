@@ -3,7 +3,7 @@ from django.views.generic import TemplateView
 # Create your views here.
 
 class Home(TemplateView):
-    template_name = "home/index.html"
+    template_name = "index.html"
     
     def get_queryset(self):
         return super().get_queryset()

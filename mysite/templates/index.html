@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chá de Panela - Ana & João</title>
-    <link href="static/styles.css" rel="stylesheet">
+    <link href="{% static 'styles.css' %}" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -135,7 +135,7 @@
             <!-- Paleta de Presentes -->
             <div class="paleta-card scale-in">
                 <div class="paleta-image">
-                    <img src="media/cozinha.png" alt="Lista de Presentes" onerror="this.parentElement.innerHTML='<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'120\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'#8b7355\' stroke-width=\'1.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\'></path><circle cx=\'12\' cy=\'7\' r=\'4\'></circle><path d=\'M12 15v6\'></path><path d=\'M12 21l3-3\'></path><path d=\'M12 21l-3-3\'></path></svg>'">
+                    <img src="/media/cozinha.png" alt="Lista de Presentes" onerror="this.parentElement.innerHTML='<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'120\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'#8b7355\' stroke-width=\'1.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\'></path><circle cx=\'12\' cy=\'7\' r=\'4\'></circle><path d=\'M12 15v6\'></path><path d=\'M12 21l3-3\'></path><path d=\'M12 21l-3-3\'></path></svg>'">
                 </div>
                 <div class="paleta-content">
                     <h3>Lista de Presentes</h3>
@@ -287,6 +287,6 @@
             </svg>
         </div>
     </footer>
-    <script src="static/script.js"></script>
+    <script src="{% static 'script.js' %}"></script>
 </body>
 </html>
