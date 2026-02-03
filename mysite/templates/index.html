@@ -175,21 +175,9 @@
                             </label>
                             <select id="presente" name="presente" required>
                                 <option value="">-- Escolha um presente da lista --</option>
-                                <option value="jogo-panelas">Jogo de Panelas Antiaderentes</option>
-                                <option value="jogo-toalhas">Jogo de Toalhas de Banho Premium</option>
-                                <option value="conjunto-potes">Conjunto de Potes Herméticos</option>
-                                <option value="jogo-cama">Jogo de Cama Casal King</option>
-                                <option value="utensilios-cozinha">Kit de Utensílios para Cozinha</option>
-                                <option value="tapetes">Conjunto de Tapetes Decorativos</option>
-                                <option value="loucas">Aparelho de Jantar 30 Peças</option>
-                                <option value="organizadores">Organizadores para Casa</option>
-                                <option value="faqueiro">Faqueiro 24 Peças Inox</option>
-                                <option value="frigideira">Jogo de Frigideiras Antiaderentes</option>
-                                <option value="copos">Jogo de Copos e Taças</option>
-                                <option value="travesseiro">Par de Travesseiros Anatômicos</option>
-                                <option value="edredom">Edredom Casal Premium</option>
-                                <option value="chaleira">Chaleira Elétrica</option>
-                                <option value="mixer">Mixer com Acessórios</option>
+                                {% for item in items %}
+                                    <option value="{{ item.id }}">{{ item.name }}</option>
+                                {% endfor %}
                             </select>
                         </div>
 
