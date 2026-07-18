@@ -6,6 +6,7 @@
 }
 
 :root {
+    color-scheme: light;
     --primary: #746243;    /* Palha escuro */
     --secondary: #B49B73;  /* Palha médio */
     --accent: #6F5C42;     /* Marrom palha */
