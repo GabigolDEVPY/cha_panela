@@ -1,8 +1,13 @@
 from django.contrib import admin
-from . models import Items
+from .models import Item, ItemReservation
 # Register your models here.
 
-@admin.register(Items)
-class ItemsPainel(admin.ModelAdmin):
+@admin.register(Item)
+class ItemPainel(admin.ModelAdmin):
     list_display = ("name", "active")
 
+@admin.register(ItemReservation)
+class ItemReservationPainel(admin.ModelAdmin):
+    list_display = ("item", "guest_name", "guest_phone", "created_at")
+    list_filter = ("item", "created_at")
+    search_fields = ("guest_name", "guest_phone")

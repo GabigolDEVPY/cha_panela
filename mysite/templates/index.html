@@ -10,7 +10,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/htmx.org@1.9.11"></script>
     <link href="{% static 'styles.css' %}" rel="stylesheet">
 </head>
 <body>
@@ -179,7 +178,7 @@
                 <div class="paleta-content">
                     <h3>Inspiração para Presentes</h3>
                     <p class="description">
-                        Separamos essas imagens como inspiração, com muito carinho, para mostrar a <strong>paleta de cores</strong> e o estilo que sonhamos para o nosso lar. 
+                        Separamos essas imagens como inspiração, com muito carinho, para mostrar a <strong>paleta de cores</strong> e o estilo que sonhamos para o nosso lar.
                         Qualquer item seguindo essas tonalidades será muito bem-vindo!
                     </p>
                 </div>
@@ -201,12 +200,16 @@
                     <div id="form-container">
                         {% if request.session.presente_confirmado %}
                             <div class="confirmacao-mensagem" style="display: block; background: #d4edda; color: #155724; padding: 20px; border-radius: 8px; text-align: center; border: 1px solid #c3e6cb; margin-top: 20px;">
+                                {% if request.session.presente_foto %}
+                                    <img src="{{ request.session.presente_foto }}" alt="{{ request.session.presente_nome }}" class="chosen-gift-image">
+                                {% endif %}
                                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px; color: #28a745;">
                                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                                     <polyline points="22 4 12 14.01 9 11.01"></polyline>
                                 </svg>
-                                <h3 style="margin-bottom: 10px; color: #155724;">Você já confirmou seu presente!</h3>
-                                <p>Agradecemos imensamente o seu carinho. Mal podemos esperar para celebrar com você!</p>
+                                <h3 style="margin-bottom: 10px; color: #155724;">Presente Confirmado!</h3>
+                                <p>Obrigado, <strong>{{ request.session.convidado_nome }}</strong>! Você escolheu: <strong>{{ request.session.presente_nome }}</strong>.</p>
+                                <p>Mal podemos esperar para celebrar com você! ✨</p>
                             </div>
                         {% else %}
                             <button onclick="document.getElementById('modal-presentes').style.display='flex'" class="btn-confirmar" style="font-size: 1.2rem; padding: 20px; margin-top: 30px;">
@@ -242,11 +245,26 @@
             <span class="close-modal" onclick="document.getElementById('modal-presentes').style.display='none'">&times;</span>
             <h2 class="section-title" style="font-size: 2.5rem; margin-top: 10px;">Selecione um Presente</h2>
             <p class="section-subtitle" style="margin-bottom: 30px;">Clique em um dos itens abaixo para selecioná-lo.</p>
-            
+
             <div id="modal-body">
                 <div class="gifts-grid">
                     {% for item in items %}
-                        <div class="gift-card {% if not item.is_available %}unavailable{% endif %}" {% if item.is_available %}onclick="selectGift({{ item.id }}, '{{ item.name|escapejs }}')"{% endif %}>
+                        <div class="gift-card {% if not item.is_available %}unavailable{% endif %}" {% if item.is_available %}onclick="selectGift({{ item.id }}, '{{ item.name|escapejs }}', '{% if item.foto %}{{ item.foto.url }}{% endif %}')"{% endif %}>
+                            {% if item.foto %}
+                                <div class="gift-image-placeholder">
+                                    <img src="{{ item.foto.url }}" alt="{{ item.name }}">
+                                </div>
+                            {% else %}
+                                <div class="gift-image-placeholder" style="display: flex; justify-content: center; align-items: center; background: var(--white);">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#b49b73" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 12 20 22 4 22 4 12"></polyline>
+                                        <rect x="2" y="7" width="20" height="5"></rect>
+                                        <line x1="12" y1="22" x2="12" y2="7"></line>
+                                        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+                                        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+                                    </svg>
+                                </div>
+                            {% endif %}
                             <h4>{{ item.name }}</h4>
                             <div class="gift-status">
                                 {% if item.is_available %}
@@ -259,13 +277,14 @@
                     {% endfor %}
                 </div>
             </div>
-            
+
             <div id="modal-form" style="display: none;">
+                <div id="selected-gift-image" style="display: flex; justify-content: center; align-items: center; margin-bottom: 15px;"></div>
                 <h3 id="selected-gift-name" style="text-align: center; color: var(--primary); margin-bottom: 20px; font-family: 'Cormorant Garamond', serif; font-size: 1.8rem;"></h3>
-                <form class="presente-selector" style="box-shadow: none; padding: 0; margin-top: 0;" hx-post="{% url 'mysite:confirmar_presente' %}" hx-target="#form-container" hx-swap="outerHTML" onsubmit="document.getElementById('modal-presentes').style.display='none'">
+                <form id="gift-form" class="presente-selector" style="box-shadow: none; padding: 0; margin-top: 0;">
                     {% csrf_token %}
                     <input type="hidden" id="presente-input" name="presente" value="">
-                    
+
                     <div class="form-group">
                         <label for="nome">Seu Nome Completo</label>
                         <input type="text" id="nome" name="nome" placeholder="Digite seu nome completo" required>
@@ -286,16 +305,108 @@
                     </div>
                 </form>
             </div>
+
+            <div id="modal-feedback" style="display: none;"></div>
         </div>
     </div>
 
     <script>
-        function selectGift(id, name) {
+        function selectGift(id, name, imageUrl) {
             document.getElementById('modal-body').style.display = 'none';
             document.getElementById('modal-form').style.display = 'block';
+            document.getElementById('modal-feedback').style.display = 'none';
             document.getElementById('presente-input').value = id;
             document.getElementById('selected-gift-name').innerText = "Você escolheu: " + name;
+
+            var imgContainer = document.getElementById('selected-gift-image');
+            if (imgContainer) {
+                if (imageUrl) {
+                    imgContainer.innerHTML = '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(name) + '" style="max-height: 120px; border-radius: 8px; object-fit: contain; margin-bottom: 10px; border: 1px solid var(--secondary);">';
+                    imgContainer.style.display = 'flex';
+                } else {
+                    imgContainer.innerHTML = '';
+                    imgContainer.style.display = 'none';
+                }
+            }
         }
+
+        function escapeHtml(value) {
+            return String(value || '').replace(/[&<>"']/g, function(char) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                }[char];
+            });
+        }
+
+        function createChosenGiftMarkup(data) {
+            var giftName = escapeHtml(data.gift_name);
+            var guestName = escapeHtml(data.guest_name);
+            var imageUrl = escapeHtml(data.gift_image);
+            var image = imageUrl
+                ? '<img src="' + imageUrl + '" alt="' + giftName + '" class="chosen-gift-image">'
+                : '';
+
+            return '' +
+                '<div class="chosen-gift-card">' +
+                    image +
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px; color: #28a745;">' +
+                        '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>' +
+                        '<polyline points="22 4 12 14.01 9 11.01"></polyline>' +
+                    '</svg>' +
+                    '<h3>Presente Confirmado!</h3>' +
+                    '<p>Obrigado, <strong>' + guestName + '</strong>! Voce escolheu: <strong>' + giftName + '</strong>.</p>' +
+                    '<p>Mal podemos esperar para celebrar com voce!</p>' +
+                '</div>';
+        }
+
+        function showGiftConfirmation(data) {
+            var feedback = document.getElementById('modal-feedback');
+            var container = document.getElementById('form-container');
+
+            document.getElementById('modal-body').style.display = 'none';
+            document.getElementById('modal-form').style.display = 'none';
+            feedback.innerHTML = createChosenGiftMarkup(data);
+            feedback.style.display = 'block';
+
+            container.innerHTML = createChosenGiftMarkup(data);
+            container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        document.getElementById('gift-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            var form = this;
+            var formData = new FormData(form);
+            var submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Enviando...';
+
+            fetch("{% url 'mysite:confirmar_presente' %}", {
+                method: 'POST',
+                body: formData,
+            })
+            .then(function(response) {
+                return response.json().then(function(data) {
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.message || 'Nao foi possivel confirmar o presente.');
+                    }
+                    return data;
+                });
+            })
+            .then(function(data) {
+                showGiftConfirmation(data);
+                form.reset();
+            })
+            .catch(function(error) {
+                alert(error.message || 'Ocorreu um erro ao confirmar. Tente novamente.');
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Confirmar';
+            });
+        });
     </script>
 
     <script src="{% static 'script.js' %}"></script>
