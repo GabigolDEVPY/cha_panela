@@ -200,7 +200,9 @@
                     <div id="form-container">
                         {% if request.session.presente_confirmado %}
                             <div class="confirmacao-mensagem" style="display: block; background: #d4edda; color: #155724; padding: 20px; border-radius: 8px; text-align: center; border: 1px solid #c3e6cb; margin-top: 20px;">
-                                {% if request.session.presente_foto %}
+                                {% if presente_fotos %}
+                                    <div id="session-gift-gallery" class="gift-gallery chosen-gift-gallery"></div>
+                                {% elif request.session.presente_foto %}
                                     <img src="{{ request.session.presente_foto }}" alt="{{ request.session.presente_nome }}" class="chosen-gift-image">
                                 {% endif %}
                                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px; color: #28a745;">
@@ -249,10 +251,13 @@
             <div id="modal-body">
                 <div class="gifts-grid">
                     {% for item in items %}
-                        <div class="gift-card {% if not item.is_available %}unavailable{% endif %}" {% if item.is_available %}onclick="selectGift({{ item.id }}, '{{ item.name|escapejs }}', '{% if item.foto %}{{ item.foto.url }}{% endif %}')"{% endif %}>
-                            {% if item.foto %}
+                        <div class="gift-card {% if not item.is_available %}unavailable{% endif %}" {% if item.is_available %}onclick='selectGift({{ item.id }}, "{{ item.name|escapejs }}", {{ item.fotos_json|safe }})'{% endif %}>
+                            {% if item.fotos %}
                                 <div class="gift-image-placeholder">
-                                    <img src="{{ item.foto.url }}" alt="{{ item.name }}">
+                                    <img src="{{ item.fotos.0 }}" alt="{{ item.name }}">
+                                    {% if item.fotos|length > 1 %}
+                                        <span class="photo-count-badge">+{{ item.fotos|length|add:"-1" }}</span>
+                                    {% endif %}
                                 </div>
                             {% else %}
                                 <div class="gift-image-placeholder" style="display: flex; justify-content: center; align-items: center; background: var(--white);">
@@ -311,7 +316,63 @@
     </div>
 
     <script>
-        function selectGift(id, name, imageUrl) {
+        function renderGiftGallery(container, imageUrls, name) {
+            if (!container) return;
+
+            if (!imageUrls || imageUrls.length === 0) {
+                container.innerHTML = '';
+                container.style.display = 'none';
+                return;
+            }
+
+            if (imageUrls.length === 1) {
+                container.innerHTML = '<img src="' + escapeHtml(imageUrls[0]) + '" alt="' + escapeHtml(name) + '" class="chosen-gift-image">';
+                container.style.display = 'block';
+                return;
+            }
+
+            var currentIndex = 0;
+            container.className = 'gift-gallery' + (container.classList.contains('chosen-gift-gallery') ? ' chosen-gift-gallery' : '');
+            container.style.display = 'block';
+
+            function updateGallery() {
+                container.innerHTML =
+                    '<div class="gallery-viewport">' +
+                        '<button type="button" class="gallery-nav gallery-prev" aria-label="Foto anterior">&lsaquo;</button>' +
+                        '<img src="' + escapeHtml(imageUrls[currentIndex]) + '" alt="' + escapeHtml(name) + '" class="gallery-image">' +
+                        '<button type="button" class="gallery-nav gallery-next" aria-label="Próxima foto">&rsaquo;</button>' +
+                    '</div>' +
+                    '<div class="gallery-dots">' +
+                        imageUrls.map(function(_, index) {
+                            return '<button type="button" class="gallery-dot' + (index === currentIndex ? ' active' : '') + '" data-index="' + index + '" aria-label="Foto ' + (index + 1) + '"></button>';
+                        }).join('') +
+                    '</div>';
+
+                container.querySelector('.gallery-prev').addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    currentIndex = (currentIndex - 1 + imageUrls.length) % imageUrls.length;
+                    updateGallery();
+                });
+
+                container.querySelector('.gallery-next').addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    currentIndex = (currentIndex + 1) % imageUrls.length;
+                    updateGallery();
+                });
+
+                container.querySelectorAll('.gallery-dot').forEach(function(dot) {
+                    dot.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        currentIndex = parseInt(dot.getAttribute('data-index'), 10);
+                        updateGallery();
+                    });
+                });
+            }
+
+            updateGallery();
+        }
+
+        function selectGift(id, name, imageUrls) {
             document.getElementById('modal-body').style.display = 'none';
             document.getElementById('modal-form').style.display = 'block';
             document.getElementById('modal-feedback').style.display = 'none';
@@ -320,13 +381,7 @@
 
             var imgContainer = document.getElementById('selected-gift-image');
             if (imgContainer) {
-                if (imageUrl) {
-                    imgContainer.innerHTML = '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(name) + '" style="max-height: 120px; border-radius: 8px; object-fit: contain; margin-bottom: 10px; border: 1px solid var(--secondary);">';
-                    imgContainer.style.display = 'flex';
-                } else {
-                    imgContainer.innerHTML = '';
-                    imgContainer.style.display = 'none';
-                }
+                renderGiftGallery(imgContainer, imageUrls, name);
             }
         }
 
@@ -345,34 +400,53 @@
         function createChosenGiftMarkup(data) {
             var giftName = escapeHtml(data.gift_name);
             var guestName = escapeHtml(data.guest_name);
-            var imageUrl = escapeHtml(data.gift_image);
-            var image = imageUrl
-                ? '<img src="' + imageUrl + '" alt="' + giftName + '" class="chosen-gift-image">'
+            var imageUrls = data.gift_images && data.gift_images.length ? data.gift_images : (data.gift_image ? [data.gift_image] : []);
+            var galleryId = 'chosen-gift-gallery-' + Date.now();
+
+            var galleryMarkup = imageUrls.length
+                ? '<div id="' + galleryId + '" class="gift-gallery chosen-gift-gallery" data-gallery-id="' + galleryId + '"></div>'
                 : '';
 
-            return '' +
-                '<div class="chosen-gift-card">' +
-                    image +
-                    '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px; color: #28a745;">' +
-                        '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>' +
-                        '<polyline points="22 4 12 14.01 9 11.01"></polyline>' +
-                    '</svg>' +
-                    '<h3>Presente Confirmado!</h3>' +
-                    '<p>Obrigado, <strong>' + guestName + '</strong>! Voce escolheu: <strong>' + giftName + '</strong>.</p>' +
-                    '<p>Mal podemos esperar para celebrar com voce!</p>' +
-                '</div>';
+            return {
+                html: '' +
+                    '<div class="chosen-gift-card">' +
+                        galleryMarkup +
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px; color: #28a745;">' +
+                            '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>' +
+                            '<polyline points="22 4 12 14.01 9 11.01"></polyline>' +
+                        '</svg>' +
+                        '<h3>Presente Confirmado!</h3>' +
+                        '<p>Obrigado, <strong>' + guestName + '</strong>! Voce escolheu: <strong>' + giftName + '</strong>.</p>' +
+                        '<p>Mal podemos esperar para celebrar com voce!</p>' +
+                    '</div>',
+                galleryId: imageUrls.length ? galleryId : null,
+                imageUrls: imageUrls,
+                giftName: data.gift_name
+            };
+        }
+
+        function mountChosenGiftMarkup(container, markupData) {
+            container.innerHTML = markupData.html;
+            if (markupData.galleryId) {
+                renderGiftGallery(
+                    document.getElementById(markupData.galleryId),
+                    markupData.imageUrls,
+                    markupData.giftName
+                );
+            }
         }
 
         function showGiftConfirmation(data) {
             var feedback = document.getElementById('modal-feedback');
             var container = document.getElementById('form-container');
+            var markupData = createChosenGiftMarkup(data);
 
             document.getElementById('modal-body').style.display = 'none';
             document.getElementById('modal-form').style.display = 'none';
-            feedback.innerHTML = createChosenGiftMarkup(data);
+            mountChosenGiftMarkup(feedback, markupData);
             feedback.style.display = 'block';
 
-            container.innerHTML = createChosenGiftMarkup(data);
+            mountChosenGiftMarkup(container, createChosenGiftMarkup(data));
             container.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
@@ -406,6 +480,17 @@
                 submitBtn.disabled = false;
                 submitBtn.innerText = 'Confirmar';
             });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var sessionGallery = document.getElementById('session-gift-gallery');
+            if (sessionGallery) {
+                renderGiftGallery(
+                    sessionGallery,
+                    {{ presente_fotos_json|safe }},
+                    '{{ request.session.presente_nome|escapejs }}'
+                );
+            }
         });
     </script>
 

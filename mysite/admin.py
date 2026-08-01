@@ -5,6 +5,10 @@ from .models import Item, ItemReservation
 @admin.register(Item)
 class ItemPainel(admin.ModelAdmin):
     list_display = ("name", "active")
+    fieldsets = (
+        (None, {"fields": ("name", "active", "quantity")}),
+        ("Fotos do produto", {"fields": ("foto", "foto2", "foto3")}),
+    )
 
 @admin.register(ItemReservation)
 class ItemReservationPainel(admin.ModelAdmin):

@@ -1001,6 +1001,7 @@ footer svg:hover {
     overflow: hidden;
     padding: 8px;
     box-sizing: border-box;
+    position: relative;
 }
 
 .gift-image-placeholder img {
@@ -1035,4 +1036,94 @@ footer svg:hover {
 .badge.unavailable {
     background: #f8d7da;
     color: #721c24;
+}
+
+.photo-count-badge {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background: rgba(116, 98, 67, 0.9);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 12px;
+}
+
+.gift-gallery {
+    margin: 0 auto 15px;
+    max-width: 280px;
+}
+
+.chosen-gift-gallery {
+    margin-bottom: 15px;
+}
+
+.gallery-viewport {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 140px;
+}
+
+.gallery-image,
+#selected-gift-image .chosen-gift-image {
+    display: block;
+    max-height: 150px;
+    max-width: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 8px;
+    border: 1px solid var(--secondary);
+    margin: 0 auto;
+}
+
+.gallery-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(116, 98, 67, 0.85);
+    color: #fff;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.gallery-prev {
+    left: 0;
+}
+
+.gallery-next {
+    right: 0;
+}
+
+.gallery-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.gallery-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: none;
+    background: #d4c5b9;
+    cursor: pointer;
+    padding: 0;
+}
+
+.gallery-dot.active {
+    background: var(--primary);
 }

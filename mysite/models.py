@@ -6,8 +6,18 @@ class Item(models.Model):
     name = models.CharField(max_length=100)
     active = models.BooleanField(default=False)
     quantity = models.IntegerField()
-    foto = models.ImageField(upload_to="items/", null=True, blank=True)
-    
+    foto = models.ImageField(upload_to="items/", null=True, blank=True, verbose_name="Foto 1")
+    foto2 = models.ImageField(upload_to="items/", null=True, blank=True, verbose_name="Foto 2")
+    foto3 = models.ImageField(upload_to="items/", null=True, blank=True, verbose_name="Foto 3")
+
+    def get_fotos(self):
+        fotos = []
+        for field in ("foto", "foto2", "foto3"):
+            img = getattr(self, field, None)
+            if img:
+                fotos.append(img.url)
+        return fotos
+
     def __str__(self):
         return f"Nome: {self.name}"
 
